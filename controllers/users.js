@@ -20,7 +20,7 @@ const getUserById = (req, res) => {
       res.send(users);
     }).catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(404).send({
+        res.status(400).send({
           message: 'Пользователь по указанному _id не найден.',
         });
       } else {
@@ -62,13 +62,7 @@ const updateUserInfo = (req, res) => {
       throw new Error('NotFound');
     })
     .then((updatedUser) => {
-      if (!name && !about) {
-        res.status(400).send({
-          message: 'Переданы некорректные данные при обновлении профиля.',
-        });
-        return;
-      }
-      res.status(201).send(updatedUser);
+      res.status(200).send(updatedUser);
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
@@ -77,8 +71,15 @@ const updateUserInfo = (req, res) => {
         });
         return;
       }
+      if (err.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные при создании пользователя.',
+        });
+        return;
+      }
       res.status(500).send({
         message: 'На сервере произошла ошибка.',
+        err: err.message,
       });
     });
 };
@@ -103,7 +104,7 @@ const updateUserAvatar = (req, res) => {
         });
         return;
       }
-      res.status(201).send(updatedUser);
+      res.status(200).send(updatedUser);
     })
     .catch((err) => {
       if (err.message === 'NotFound') {

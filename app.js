@@ -18,6 +18,12 @@ app.use((req, res, next) => {
 app.use(usersRouter);
 app.use(cardsRouter);
 
+app.use((req, res) => {
+  res.status(404).send({
+    message: 'Неверно указан путь.',
+  });
+});
+
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
