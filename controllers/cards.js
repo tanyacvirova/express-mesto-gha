@@ -1,8 +1,8 @@
 const cardModel = require('../models/card');
 const ValidationError = require('../errors/validation-err');
-const UnauthorizedError = require('../errors/unauthorized-err');
 const NotFoundError = require('../errors/not-found-err');
 const UnhandledError = require('../errors/unhandled-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
 const getCards = (req, res, next) => {
   cardModel.find({})
@@ -40,7 +40,7 @@ const deleteCard = (req, res, next) => {
     })
     .then((deletedCard) => {
       if (deletedCard.owner.valueOf() !== req.user._id) {
-        throw new Error('Unauthorized');
+        throw new Error('Forbidden');
       }
       cardModel.findByIdAndRemove(deletedCard._id.valueOf())
         .then(res.status(200).send({ message: 'Карточка удалена.' }))
@@ -49,8 +49,8 @@ const deleteCard = (req, res, next) => {
         });
     })
     .catch((err) => {
-      if (err.message === 'Unauthorized') {
-        throw new UnauthorizedError('Карточку может удалить только ее автор.');
+      if (err.message === 'Forbidden') {
+        throw new ForbiddenError('Карточку может удалить только ее автор.');
       }
       if (err.message === 'NotFound') {
         throw new NotFoundError('Передан несуществующий _id карточки.');
