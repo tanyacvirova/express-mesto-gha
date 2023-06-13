@@ -10,9 +10,6 @@ const getCards = (req, res, next) => {
     .then((cards) => {
       res.send(cards);
     })
-    .catch(() => {
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
     .catch(next);
 };
 
@@ -26,11 +23,11 @@ const createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError('Переданы некорректные данные.');
+        next(new ValidationError('Переданы некорректные данные.'));
+      } else {
+        next(err);
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+    });
 };
 
 const deleteCard = (req, res, next) => {
@@ -50,17 +47,16 @@ const deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.message === 'Forbidden') {
-        throw new ForbiddenError('Карточку может удалить только ее автор.');
+        next(new ForbiddenError('Карточку может удалить только ее автор.'));
       }
       if (err.message === 'NotFound') {
-        throw new NotFoundError('Передан несуществующий _id карточки.');
+        next(new NotFoundError('Передан несуществующий _id карточки.'));
       }
       if (err.name === 'CastError') {
-        throw new ValidationError('Переданы некорректные данные.');
+        next(new ValidationError('Переданы некорректные данные.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 const likeCard = (req, res, next) => {
@@ -78,14 +74,13 @@ const likeCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        throw new NotFoundError('Передан несуществующий _id карточки.');
+        next(new NotFoundError('Передан несуществующий _id карточки.'));
       }
       if (err.name === 'CastError') {
-        throw new ValidationError('Переданы некорректные данные.');
+        next(new ValidationError('Переданы некорректные данные.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 const dislikeCard = (req, res, next) => {
@@ -103,14 +98,13 @@ const dislikeCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        throw new NotFoundError('Передан несуществующий _id карточки.');
+        next(new NotFoundError('Передан несуществующий _id карточки.'));
       }
       if (err.name === 'CastError') {
-        throw new ValidationError('Переданы некорректные данные.');
+        next(new ValidationError('Переданы некорректные данные.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 module.exports = {

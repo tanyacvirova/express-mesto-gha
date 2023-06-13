@@ -6,15 +6,11 @@ const ValidationError = require('../errors/validation-err');
 const UnauthorizedError = require('../errors/unauthorized-err');
 const NotFoundError = require('../errors/not-found-err');
 const ConflictError = require('../errors/conflict-err');
-const UnhandledError = require('../errors/unhandled-err');
 
 const getUsers = (req, res, next) => {
   userModel.find({})
     .then((users) => {
       res.send(users);
-    })
-    .catch(() => {
-      throw new UnhandledError('На сервере произошла ошибка.');
     })
     .catch(next);
 };
@@ -29,23 +25,19 @@ const getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        throw new NotFoundError('Пользователь по указанному _id не найден.');
+        next(new NotFoundError('Пользователь по указанному _id не найден.'));
       }
       if (err.name === 'CastError') {
-        throw new ValidationError('Переданы некорректные данные.');
+        next(new ValidationError('Переданы некорректные данные.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 const getCurrnetUser = (req, res, next) => {
   userModel.findById(req.user._id)
     .then((user) => {
       res.send(user);
-    })
-    .catch(() => {
-      throw new UnhandledError('На сервере произошла ошибка.');
     })
     .catch(next);
 };
@@ -70,14 +62,13 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        throw new ConflictError('Пользователь с таким email уже существует.');
+        next(new ConflictError('Пользователь с таким email уже существует.'));
       }
       if (err.name === 'ValidationError') {
-        throw new ValidationError('Переданы некорректные данные.');
+        next(new ValidationError('Переданы некорректные данные.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 const logInUser = (req, res, next) => {
@@ -92,15 +83,14 @@ const logInUser = (req, res, next) => {
         throw new UnauthorizedError('Неверные пользователь или пароль.');
       }
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-      res.status(200).send({ token });
+      res.send({ token });
     })
     .catch((err) => {
       if (err.message === 'Unauthorized') {
-        throw new UnauthorizedError('Неверные пользователь или пароль.');
+        next(new UnauthorizedError('Неверные пользователь или пароль.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 const updateUserInfo = (req, res, next) => {
@@ -121,14 +111,13 @@ const updateUserInfo = (req, res, next) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        throw new NotFoundError('Пользователь по указанному _id не найден.');
+        next(new NotFoundError('Пользователь по указанному _id не найден.'));
       }
       if (err.name === 'ValidationError') {
-        throw new ValidationError('Переданы некорректные данные.');
+        next(new ValidationError('Переданы некорректные данные.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 const updateUserAvatar = (req, res, next) => {
@@ -149,14 +138,13 @@ const updateUserAvatar = (req, res, next) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        throw new NotFoundError('Пользователь по указанному _id не найден.');
+        next(new NotFoundError('Пользователь по указанному _id не найден.'));
       }
       if (err.name === 'ValidationError') {
-        throw new ValidationError('Переданы некорректные данные при обновлении аватара.');
+        next(new ValidationError('Переданы некорректные данные при обновлении аватара.'));
       }
-      throw new UnhandledError('На сервере произошла ошибка.');
-    })
-    .catch(next);
+      next(err);
+    });
 };
 
 module.exports = {
