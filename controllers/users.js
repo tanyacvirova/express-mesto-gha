@@ -18,19 +18,17 @@ const getUsers = (req, res, next) => {
 const getUserById = (req, res, next) => {
   userModel.findById(req.params.userId)
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFoundError('Пользователь по указанному _id не найден.');
     })
     .then((users) => {
       res.send(users);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
       if (err.name === 'CastError') {
         next(new ValidationError('Переданы некорректные данные.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -63,11 +61,11 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError('Пользователь с таким email уже существует.'));
-      }
-      if (err.name === 'ValidationError') {
+      } else if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -75,7 +73,7 @@ const logInUser = (req, res, next) => {
   const { email, password } = req.body;
   userModel.findOne({ email }).select('+password')
     .orFail(() => {
-      throw new Error('Unauthorized');
+      throw new UnauthorizedError('Неверные пользователь или пароль.');
     })
     .then((user) => Promise.all([user, bcrypt.compare(password, user.password)]))
     .then(([user, matched]) => {
@@ -85,12 +83,7 @@ const logInUser = (req, res, next) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.send({ token });
     })
-    .catch((err) => {
-      if (err.message === 'Unauthorized') {
-        next(new UnauthorizedError('Неверные пользователь или пароль.'));
-      }
-      next(err);
-    });
+    .catch(next);
 };
 
 const updateUserInfo = (req, res, next) => {
@@ -104,19 +97,17 @@ const updateUserInfo = (req, res, next) => {
     },
   )
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFoundError('Пользователь по указанному _id не найден.');
     })
     .then((updatedUser) => {
       res.status(200).send(updatedUser);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
       if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -131,19 +122,17 @@ const updateUserAvatar = (req, res, next) => {
     },
   )
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFoundError('Пользователь по указанному _id не найден.');
     })
     .then((updatedUser) => {
       res.status(200).send(updatedUser);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
       if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные при обновлении аватара.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 

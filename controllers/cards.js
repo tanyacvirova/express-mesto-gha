@@ -1,7 +1,6 @@
 const cardModel = require('../models/card');
 const ValidationError = require('../errors/validation-err');
 const NotFoundError = require('../errors/not-found-err');
-const UnhandledError = require('../errors/unhandled-err');
 const ForbiddenError = require('../errors/forbidden-err');
 
 const getCards = (req, res, next) => {
@@ -33,29 +32,22 @@ const createCard = (req, res, next) => {
 const deleteCard = (req, res, next) => {
   cardModel.findById(req.params.cardId)
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFoundError('Передан несуществующий _id карточки.');
     })
     .then((deletedCard) => {
       if (deletedCard.owner.valueOf() !== req.user._id) {
-        throw new Error('Forbidden');
+        throw new ForbiddenError('Карточку может удалить только ее автор.');
       }
       cardModel.findByIdAndRemove(deletedCard._id.valueOf())
         .then(res.status(200).send({ message: 'Карточка удалена.' }))
-        .catch(() => {
-          throw new UnhandledError('На сервере произошла ошибка.');
-        });
+        .catch(next);
     })
     .catch((err) => {
-      if (err.message === 'Forbidden') {
-        next(new ForbiddenError('Карточку может удалить только ее автор.'));
-      }
-      if (err.message === 'NotFound') {
-        next(new NotFoundError('Передан несуществующий _id карточки.'));
-      }
       if (err.name === 'CastError') {
         next(new ValidationError('Переданы некорректные данные.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -67,19 +59,17 @@ const likeCard = (req, res, next) => {
   )
     .populate('owner')
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFoundError('Передан несуществующий _id карточки.');
     })
     .then((likedCard) => {
       res.send(likedCard);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        next(new NotFoundError('Передан несуществующий _id карточки.'));
-      }
       if (err.name === 'CastError') {
         next(new ValidationError('Переданы некорректные данные.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -91,19 +81,17 @@ const dislikeCard = (req, res, next) => {
   )
     .populate('owner')
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFoundError('Передан несуществующий _id карточки.');
     })
     .then((likedCard) => {
       res.send(likedCard);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        next(new NotFoundError('Передан несуществующий _id карточки.'));
-      }
       if (err.name === 'CastError') {
         next(new ValidationError('Переданы некорректные данные.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
